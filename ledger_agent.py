@@ -126,14 +126,23 @@ def run(spec):
 
 
 # ---------- STEP 4: the public endpoint ----------
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 class Q(BaseModel):
     question: str
 
 
+@app.get("/")
+def health():
+    return {"status": "ok", "orders_loaded": int(len(DF))}
+
+
 @app.post("/")
+@app.post("/{path:path}")      # accept POST at any path, so the submitted URL can't 404
 def answer(q: Q):
     try:
         return {"answer": run(ask_llm(q.question))}
